@@ -20,7 +20,7 @@ int main(){
             count++;
         }
     }
-    average = sum / count;
+    average = (float)sum / (float)count;
     printf("Average is: %.2f", average);
     return 0;
 }
