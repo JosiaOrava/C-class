@@ -25,7 +25,6 @@ int main(){
     for(int j = 0; j < i; j++){
         fprintf(f,"%d ", nums[j]);
     }
-    
     fclose(f);
 
     return 0;
