@@ -4,6 +4,7 @@
 #define WEEKDAYS 5
 #define CHARAMMOUNT 50
 #define ROW_DATA 500
+#define BUFFER_SIZE 1024
 
 int checkTime(int time){
     // This checks users entered time and based on that
@@ -31,6 +32,7 @@ int checkTime(int time){
         row = 20;
     } else{
         printf("Time not correct.\n");
+        return 0;
     }
     return row;
 }
@@ -50,7 +52,8 @@ int checkDay(char *day){
     } else if(strcmp(day,wkDays[4]) == 0){
         dayCol = 4;
     } else{
-        printf("Day not correct.");
+        printf("Day not correct.\n");
+        return -1;
     }
     return dayCol;
 }
@@ -63,14 +66,14 @@ void addClass(int time,char *day, char *name, char *room){
     fTemp = fopen("tmp.csv", "w");
 
     // we save class name and room number later to these
-    char *arrayClass[6] = {" ", " ", " ", " ", " ", " "};
-    char *arrayRoom[6] = {" ", " ", " ", " ", " "," "};
+    char arrayClass[6][15] = {" ", " ", " ", " ", " ", " "};
+    char arrayRoom[6][15] = {" ", " ", " ", " ", " "," "};
 
     if(!f){
         printf("Can't open file\n");
     }
     else{
-        char buffer[1024];
+        char buffer[BUFFER_SIZE];
         int row,column;
         int tmpRow = 0;
         char rowData[ROW_DATA];
@@ -85,13 +88,13 @@ void addClass(int time,char *day, char *name, char *room){
                 token = strtok(rowData, ",");
                 int j = 0;
                 while(token != NULL){
-                    arrayClass[j] = token;
+                    strcpy(arrayClass[j], token);
                     j++;
                     token = strtok(NULL, ",");
                 }
                 for(int i = 0; i<5; i++){
                     if(i == column){
-                        arrayClass[i+1] = name;
+                        strcpy(arrayClass[i+1], name);
                     }
                 }       
                 // Print the class name and room arrays into file if it's the right row
@@ -101,13 +104,13 @@ void addClass(int time,char *day, char *name, char *room){
                 token = strtok(rowData, ",");
                 int x = 0;
                 while(token != NULL){
-                    arrayRoom[x] = token;
+                    strcpy(arrayRoom[x], token);
                     x++;
                     token = strtok(NULL, ",");
                 }
                 for(int k = 0; k<5; k++){
                     if(k == column){
-                        arrayRoom[k+1] = room;
+                        strcpy(arrayRoom[k+1], room);
                     }
                 }    
                 fprintf(fTemp," ,%s,%s,%s,%s,%s,\n", arrayRoom[1], arrayRoom[2], arrayRoom[3], arrayRoom[4], arrayRoom[5]);
@@ -186,18 +189,47 @@ void delClass(char *day, int time){
     if(!f){
         printf("Can't open file.");
     } else{
-        char buffer[1024];
+        char buffer[BUFFER_SIZE];
         int row,column;
         int tmpRow = 0;
         char rowData[ROW_DATA];
+        char *token;
+        char arrayClass[6][15] = {" ", " ", " ", " ", " ", " "};
+        char arrayRoom[6][15] = {" ", " ", " ", " ", " "," "};
 
         row = checkTime(time);
         column = checkDay(day);
         while(fgets(rowData, ROW_DATA, f)){
             if(tmpRow == row-1){
-                fprintf(fTemp, "%d:00, , , , , ", time);
-                fprintf(fTemp, " , , , , , ");
-            } else{
+                token = strtok(rowData, ",");
+                int j = 0;
+                while(token != NULL){
+                    strcpy(arrayClass[j], token);
+                    j++;
+                    token = strtok(NULL, ",");
+                }
+                for(int i = 0; i<5; i++){
+                    if(i == column){
+                        strcpy(arrayClass[i+1], " ");
+                    }
+                }    
+                fprintf(fTemp,"%d:00,%s,%s,%s,%s,%s,\n", time, arrayClass[1], arrayClass[2], arrayClass[3], arrayClass[4], arrayClass[5]);
+                
+            } else if(tmpRow == row){
+                token = strtok(rowData, ",");
+                int x = 0;
+                while(token != NULL){
+                    strcpy(arrayRoom[x], token);
+                    x++;
+                    token = strtok(NULL, ",");
+                }
+                for(int k = 0; k<5; k++){
+                    if(k == column){
+                        strcpy(arrayRoom[k+1], " ");
+                    }
+                }    
+                fprintf(fTemp," ,%s,%s,%s,%s,%s,\n", arrayRoom[1], arrayRoom[2], arrayRoom[3], arrayRoom[4], arrayRoom[5]);
+                } else{
                 fprintf(fTemp, rowData);
             }
             tmpRow++;
@@ -227,18 +259,54 @@ int main(){
         scanf("%d", &choice);
         if(choice == 1){
             printf("Give class: time, day, name, classroom\n");
-            scanf("%d", &time);
-            scanf("%s", day);
-            scanf("%s", name);
+            while(1){
+                printf("Time: ");
+                scanf("%d", &time);
+                if(checkTime(time) == 0){
+                    printf("Give proper time hour.\n");
+                } else{
+                    break;
+                }
+            }
+            while(1){
+                printf("Day: ");
+                scanf("%s", day);
+                if(checkDay(day) == -1){
+                    printf("Give proper day.\n");
+                } else{
+                    break;
+                }
+            }
+            printf("Class name: ");
+            fflush(stdin);
+            scanf("%[^\n]", name);
+            fflush(stdin);
+            printf("Classroom: ");
             scanf("%s", classroom);
             addClass(time,day,name,classroom);
         } else if(choice == 2){
-            printf("Give day and time:\n");
-            scanf("%s", day);
-            scanf("%d", &time);
+            printf("Give time and day:\n");
+            while(1){
+                printf("Time: ");
+                scanf("%d", &time);
+                if(checkTime(time) == 0){
+                    printf("Give proper time hour.\n");
+                } else{
+                    break;
+                }
+            }
+            while(1){
+                printf("Day: ");
+                scanf("%s", day);
+                if(checkDay(day) == -1){
+                    printf("Give proper day.\n");
+                } else{
+                    break;
+                }
+            }
             delClass(day, time);
         } else if (choice == 3){
-            printf("Emptying database...");
+            printf("Emptying database...\n");
             iniDatabase();
         } else if(choice == 4){
             printDatabase();
